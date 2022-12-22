@@ -7,8 +7,8 @@ public class Flasher : MonoBehaviour
 {
     private float durationToFlash = 0f;
     [SerializeField] float timeBetweenFlash;
-    [SerializeField] Color32 defaultTextColor;
-    [SerializeField] Color32[] flashColors;
+    private Color defaultColor;
+    [SerializeField] Color[] flashColors;
     private int currentColor = 0;
     private float timeSinceLastFlash = 0f;
     private bool isFlashing = false;
@@ -16,6 +16,7 @@ public class Flasher : MonoBehaviour
     private float timeOn;
     void Start()
     {
+        defaultColor = GetComponent<SpriteRenderer>().color;
         spRenderer = GetComponent<SpriteRenderer>();
     }
 
@@ -23,8 +24,14 @@ public class Flasher : MonoBehaviour
     {
         if (isFlashing){
             timeSinceLastFlash += Time.deltaTime;
+            timeOn += Time.deltaTime;
             if(timeSinceLastFlash >= timeBetweenFlash){
                 flash();
+            }
+            if (timeOn >= durationToFlash){
+                Debug.Log("Stopping flash");
+                isFlashing = false;
+                spRenderer.color = defaultColor;
             }
         }
     }
@@ -35,17 +42,26 @@ public class Flasher : MonoBehaviour
             currentColor = 0;
         }
         spRenderer.color = flashColors[currentColor];
-        if (timeOn >= durationToFlash){
-            isFlashing = false;
-            spRenderer.color = defaultTextColor;
-        }
     }
     public void startFlasher(float duration)
     {
+        Debug.Log("Starting flasher");
+        //StopCoroutine("flasher");
+        //StartCoroutine(flasher(duration));
         durationToFlash = duration;
         timeOn = 0f;
         currentColor = 0;
         isFlashing = true;
         flash();
+    }
+    //TODO turn flasher into an IEnumerator
+    IEnumerator flasher(float duration){
+        isFlashing = true;
+        currentColor = 0;
+        while(true){
+            flash();
+            yield return new WaitForSeconds(timeBetweenFlash);
+        }
+        isFlashing = false;
     }
 }
