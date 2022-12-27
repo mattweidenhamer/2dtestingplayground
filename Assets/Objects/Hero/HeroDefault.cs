@@ -13,17 +13,19 @@ public class HeroDefault : MonoBehaviour
     //One hitpoint should be equal to a quarter or half a heart
     
     [SerializeField] float timeUntilChainCheckingStops = 3f;
-    [SerializeField] float disableDurationOnMaxCombo = 5f;
     private int chainedHits = 0;
     private bool checkingForChain = false;
     private Flasher myFlasher;
     private bool invuln = false;
     [HideInInspector] public bool alive = true;
 
+    [Header("Knockback")]
     [SerializeField] Vector2 impact2Hits;
     [SerializeField] Vector2 impact3Hits;
     [SerializeField] Vector2 impact4Hits;
     [SerializeField] Vector2 knockbackModifier;
+    [SerializeField] int timesToReduceDrag;
+    [SerializeField] float knockbackTime;
     private float defaultDrag;
     private void FixedUpdate() {
         //TODO in the future when making these, split as much code as psosible into their own fuctions for maximum modularity
@@ -101,11 +103,15 @@ public class HeroDefault : MonoBehaviour
     }
     IEnumerator becomeBouncy(){
         Debug.Log("Doing big knockback");
-        myBody.drag = 1f;
         myBody.sharedMaterial = knockbackMaterial;
         invuln = true;
-        //Idea: Increase the drag slowly again until normal again, based on how quickly
-        yield return new WaitForSeconds(disableDurationOnMaxCombo);
+        //TODO consider increasing exponentially, start will small increases, then go to big increases.
+        for(int i = 0; i < timesToReduceDrag; i++){
+            float multiplier = (float) i / (float) timesToReduceDrag;
+            Debug.Log(multiplier.ToString());
+            myBody.drag = defaultDrag * multiplier;
+            yield return new WaitForSeconds((knockbackTime / timesToReduceDrag));
+        }
         Debug.Log("Done with knockback");
         myBody.drag = defaultDrag;
         myBody.sharedMaterial = defaultMaterial;
